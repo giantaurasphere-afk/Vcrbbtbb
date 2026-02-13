@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For My Valentine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #ff4d6d;
+            --secondary: #ff8fa3;
+            --bg-color: #fff0f3;
+            --gold: #ffd700;
+            --dark: #2d0010;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--dark);
+            overflow-x: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* --- UTILS --- */
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 1s forwards; }
+        .slide-up { animation: slideUp 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(100vh); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .btn {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border: none;
+            padding: 12px 30px;
+            color: white;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--primary); }
+        .glowing-text { text-shadow: 0 0 10px var(--primary), 0 0 20px var(--secondary); }
+
+        /* --- SCREEN CONTAINERS --- */
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: var(--bg-color);
+            transition: opacity 0.8s ease;
+        }
+
+        /* --- 1. LOCK SCREEN --- */
+        #lock-screen {
+            background: #1a1a1a;
+            color: var(--gold);
+            z-index: 100;
+        }
+        .gear-system {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        .gear {
+            position: absolute;
+            border: 5px dashed var(--gold);
+            border-radius: 50%;
+            animation: spin 10s linear infinite;
+        }
+        .g1 { width: 200px; height: 200px; top: -50px; left: -50px; }
+        .g2 { width: 300px; height: 300px; bottom: -100px; right: -50px; animation-direction: reverse; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .lock-container {
+            background: rgba(0,0,0,0.8);
+            padding: 40px;
+            border: 2px solid var(--gold);
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+        }
+        .lock-title { font-family: 'Dancing Script', cursive; font-size: 2.5rem; margin-bottom: 20px; }
+        input#password {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--gold);
+            color: white;
+            font-size: 1.5rem;
+            text-align: center;
+            padding: 10px;
+            outline: none;
+            width: 100%;
+            letter-spacing: 3px;
+        }
+        .err-msg { color: red; font-size: 0.9rem; margin-top: 10px; height: 20px; }
+
+        /* --- 2. REVEAL PAGE --- */
+        #reveal-page { background: radial-gradient(circle, #fff0f3 0%, #ffc2d1 100%); }
+        .main-title { font-family: 'Dancing Script', cursive; font-size: 3rem; color: #d60036; margin-bottom: 20px; }
+        .bouquet-img {
+            max-width: 80%;
+            max-height: 50vh;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+        }
+
+        /* --- 3. GAME 1 (Cupid's Rhythm) --- */
+        #game1-page { background: #fff5f7; }
+        .game-area {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border: 4px solid var(--primary);
+            border-radius: 50%;
+            margin: 20px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            overflow: hidden;
+        }
+        .target-zone {
+            position: absolute;
+            top: 0;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 77, 109, 0.3);
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            z-index: 2;
+        }
+        .spinner {
+            width: 20px;
+            height: 150px;
+            background: linear-gradient(to top, transparent 50%, var(--dark) 50%);
+            position: absolute;
+            transform-origin: center;
+            animation: radar 2s linear infinite;
+        }
+        @keyframes radar { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .score-board { font-size: 1.5rem; margin-bottom: 10px; }
+
+        /* --- VIDEO FRAMES --- */
+        .video-frame {
+            border: 5px solid white;
+            border-radius: 15px;
+            box-shadow: 0 0 20px var(--primary), 0 0 40px var(--secondary);
+            overflow: hidden;
+            width: 90%;
+            max-width: 350px;
+            margin: 10px auto;
+            position: relative;
+            background: black;
+        }
+        video { width: 100%; display: block; }
+        .falling-emojis {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1;
+        }
+
+        /* --- ENVELOPE --- */
+        .envelope-container { perspective: 1000px; margin: 30px auto; cursor: pointer; }
+        .envelope {
+            width: 300px; height: 200px; background: #d60036; position: relative;
+            display: flex; justify-content: center; align-items: center;
+            transform-style: preserve-3d; transition: transform 0.6s;
+        }
+        .flap {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100px;
+            background: #ff3355; transform-origin: top; transition: 0.5s; z-index: 5;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+        }
+        .letter {
+            position: absolute; top: 10px; width: 90%; height: 90%; background: white;
+            padding: 15px; font-size: 0.9rem; text-align: left;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: 0.5s; transform: translateY(0); z-index: 2;
+            overflow-y: auto; font-family: 'Dancing Script', cursive; font-size: 1.2rem;
+            opacity: 0;
+        }
+        .envelope.open .flap { transform: rotateX(180deg); z-index: 1; }
+        .envelope.open .letter { transform: translateY(-50px); z-index: 10; opacity: 1; height: 300px;}
+
+        /* --- GAME 2 (Cuteness Scanner) --- */
+        .scanner-container {
+            width: 300px; height: 300px; background: #000; position: relative;
+            margin: 20px auto; border-radius: 20px; overflow: hidden;
+            border: 4px solid var(--primary);
+        }
+        .scan-line {
+            width: 100%; height: 5px; background: cyan;
+            box-shadow: 0 0 10px cyan;
+            position: absolute; top: 0;
+            animation: scan 2s linear infinite;
+        }
+        @keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
+        .scan-text { color: cyan; font-family: monospace; position: absolute; bottom: 10px; left: 10px; }
+        .parameter-box {
+            background: white; padding: 10px; margin: 5px; border-radius: 10px; width: 80%;
+            display: flex; justify-content: space-between; align-items: center;
+            opacity: 0; transform: translateX(-50px); transition: 0.5s;
+        }
+        .progress-bar { width: 100px; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; }
+        .fill { height: 100%; background: var(--primary); width: 0%; transition: width 1s; }
+
+        /* --- PICKUP LINES --- */
+        .dialogue-box {
+            background: white; padding: 20px; border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 90%; max-width: 400px;
+            margin-bottom: 20px;
+        }
+        .profile-img {
+            width: 150px; height: 150px; border-radius: 50%;
+            object-fit: cover; border: 5px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin-bottom: 20px;
+        }
+
+        /* --- FINAL --- */
+        #final-screen { background: black; color: white; }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" loop>
+        <source src="song.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="lock-screen" class="screen">
+        <div class="gear-system">
+            <div class="gear g1"></div>
+            <div class="gear g2"></div>
+        </div>
+        <div class="lock-container">
+            <h1 class="lock-title">Valentine's Vault</h1>
+            <p style="margin-bottom:10px; font-size: 0.9rem;">Mechanical Security Active</p>
+            <input type="password" id="password" placeholder="ENTER CODE">
+            <div id="lock-error" class="err-msg"></div>
+            <button class="btn" onclick="checkPass()">UNLOCK ❤️</button>
+        </div>
+    </div>
+
+    <div id="reveal-page" class="screen hidden">
+        <h1 class="main-title">Happy Valentine's day babe !</h1>
+        <img src="1000398592.png" alt="Bouquet" class="bouquet-img" id="bouquet">
+        <h3 style="margin-top: 20px; color: #555;">I want to tell you something 🫠</h3>
+        <button class="btn glowing-text" onclick="nextPage('reveal-page', 'game1-page')">sayy, dear</button>
+    </div>
+
+    <div id="game1-page" class="screen hidden">
+        <h2 style="color: var(--primary);">Unlock My Heart</h2>
+        <p>Stop the spinner exactly on the heart!</p>
+        <div class="score-board">Level: <span id="g1-level">1</span>/3</div>
+        <div class="game-area" onclick="stopSpinner()">
+            <div class="target-zone"></div>
+            <div class="spinner" id="g1-spinner"></div>
+            <div style="font-size: 3rem; color: var(--primary); z-index: 1;">❤️</div>
+        </div>
+        <div id="g1-msg" style="height: 30px; color: var(--primary); font-weight: bold;"></div>
+        <button class="btn hidden" id="g1-next-btn" onclick="finishGame1()">Continue</button>
+    </div>
+
+    <div id="video1-page" class="screen hidden">
+        <div class="falling-emojis" id="rain-emojis"></div>
+        <div class="video-frame">
+            <video id="vid1" src="1000398538.mp4" loop playsinline muted autoplay></video>
+        </div>
+        <div id="v1-popup-area"></div>
+    </div>
+
+    <div id="choice-page" class="screen hidden">
+        <div class="video-frame" style="border: none; background: transparent; box-shadow: none;">
+            <img src="1000398597.png" style="width: 100%; animation: slideUp 1s;">
+        </div>
+        <h3>Choose any on them !</h3>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+            <button class="btn" onclick="goToLetter()">♡</button>
+            <button class="btn" onclick="goToLetter()">♡♡</button>
+            <button class="btn" onclick="goToLetter()">♡♡♡</button>
+            <button class="btn" onclick="goToLetter()">♡♡♡♡</button>
+        </div>
+    </div>
+
+    <div id="letter-page" class="screen hidden">
+        <div class="envelope-container" onclick="openEnvelope()">
+            <div class="envelope" id="main-envelope">
+                <div class="flap"></div>
+                <div class="letter">
+                    My Dearest, <br><br>
+                    Every moment with you feels like a beautiful melody. You are the sparkle in my universe and the peace in my chaos. <br><br>
+                    I don't just want you for today, I want you forever. <br><br>
+                    Will you make me the luckiest person alive? <br><br>
+                    I Love You ❤️
+                </div>
+            </div>
+        </div>
+        <p id="env-inst">tap to open</p>
+        <button class="btn hidden" id="letter-cont-btn" onclick="nextPage('letter-page', 'convince-page')">Continue</button>
+    </div>
+
+    <div id="convince-page" class="screen hidden">
+        <h2 class="main-title">abhi tak convince nhi huye ? 😭</h2>
+        <h3>Please be my valentine 🤗</h3>
+        <button class="btn glowing-text" onclick="nextPage('convince-page', 'game2-page')">thora aur sabar karo 🤭</button>
+    </div>
+
+    <div id="game2-page" class="screen hidden">
+        <h2 style="color: var(--primary);">System Analysis...</h2>
+        <div class="scanner-container">
+            <div class="scan-line"></div>
+            <div class="scan-text">SCANNING SUBJECT...</div>
+            <img src="1000398587.jpg" style="width:100%; height:100%; object-fit: cover; opacity: 0.5;">
+        </div>
+        <div id="params-container">
+            </div>
+        <button class="btn hidden" id="g2-next-btn" onclick="nextPage('game2-page', 'pickup1-page')">Analysis Complete</button>
+    </div>
+
+    <div id="pickup1-page" class="screen hidden">
+        <div class="dialogue-box">
+            <p>I got to know that u have cigarette very often ? 🤨</p>
+        </div>
+        <div id="p1-opt1">
+            <button class="btn" onclick="pickup1Step2()">yeah I don't think that's a bad thing</button>
+        </div>
+        <div id="p1-popup1" class="dialogue-box hidden" style="background: #ffe6e6; border: 2px solid red;">
+            <p style="font-weight: bold; color: red;">You are an addict and you need to quit that habit !!!!!</p>
+        </div>
+        <div id="p1-opt2" class="hidden">
+            <button class="btn" onclick="pickup1Step3()">why ??</button>
+        </div>
+        <div id="p1-popup2" class="dialogue-box hidden" style="background: #e6fffa; border: 2px solid green;">
+            <p>Cause I am trying my best to be your favourite habit 😁</p>
+        </div>
+        <button class="btn hidden" id="p1-cont" onclick="nextPage('pickup1-page', 'photo-reveal-page')">Continue</button>
+    </div>
+
+    <div id="photo-reveal-page" class="screen hidden">
+        <img src="1000398587.jpg" class="profile-img slide-up">
+        <button class="btn" onclick="nextPage('photo-reveal-page', 'pickup2-page')">Continue</button>
+    </div>
+
+    <div id="pickup2-page" class="screen hidden">
+        <div class="dialogue-box">
+            <p>I was doing an equation somedays ago !</p>
+        </div>
+        <div id="p2-opt1">
+            <button class="btn" onclick="pickup2Step2()">oh okay !</button>
+        </div>
+        <div id="p2-popup1" class="dialogue-box hidden">
+            <p>Everything was balanced... predictable... logical, but I couldn't find the solution at all 😕</p>
+        </div>
+        <div id="p2-opt2" class="hidden">
+            <button class="btn" onclick="pickup2Step3()">why ! I think you may have done a mistake !</button>
+        </div>
+        <div id="p2-popup2" class="dialogue-box hidden" style="background: #fff0f5;">
+            <p>no, not actually, now I have the answer as you were the only variable i required to find the solution dear🫠❤️</p>
+        </div>
+        <button class="btn hidden" id="p2-cont" onclick="nextPage('pickup2-page', 'video2-page')">that's cute 🥰</button>
+    </div>
+
+    <div id="video2-page" class="screen hidden">
+        <div class="video-frame">
+            <video id="vid2" src="1000398539.mp4" playsinline></video>
+        </div>
+        <button class="btn" onclick="finishVideo2()">Continue</button>
+    </div>
+
+    <div id="final-page" class="screen hidden">
+        <h2 class="main-title" style="font-size: 2rem;">So, one more time I am asking,<br>will you be me valentine?? 🙂</h2>
+        <div style="display: flex; gap: 20px; justify-content: center; margin-top: 30px;">
+            <button class="btn" onclick="sheSaidYes()" style="background: green;">Yessssss 🫂</button>
+            <button class="btn" onclick="sheSaidNo()" style="background: grey;">Noo 😕</button>
+        </div>
+    </div>
+
+    <script>
+        const audio = document.getElementById('bg-music');
+        
+        // --- PAGE NAVIGATION ---
+        function nextPage(currentId, nextId) {
+            const current = document.getElementById(currentId);
+            const next = document.getElementById(nextId);
+            
+            current.style.opacity = '0';
+            setTimeout(() => {
+                current.classList.add('hidden');
+                next.classList.remove('hidden');
+                next.classList.add('fade-in');
+                
+                // Specific Trigger logic
+                if(nextId === 'game1-page') startGame1();
+                if(nextId === 'video1-page') startVideo1Sequence();
+                if(nextId === 'game2-page') startGame2();
+                if(nextId === 'video2-page') startVideo2();
+
+            }, 800);
+        }
+
+        // --- LOCK SCREEN ---
+        function checkPass() {
+            const pass = document.getElementById('password').value;
+            if(pass === 'loveyouforever') {
+                // Unlock
+                audio.play().catch(e => console.log("Audio interaction needed"));
+                // Fire crackers
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                
+                const lockScreen = document.getElementById('lock-screen');
+                lockScreen.style.transform = 'translateY(-100%)';
+                lockScreen.style.transition = 'transform 1s ease-in-out';
+                
+                setTimeout(() => {
+                    lockScreen.classList.add('hidden');
+                    const reveal = document.getElementById('reveal-page');
+                    reveal.classList.remove('hidden');
+                    
+                    // Animate Bouquet #1
+                    const bouquet = document.getElementById('bouquet');
+                    bouquet.classList.add('slide-up');
+                    
+                    // Burst crackers
+                    let duration = 3 * 1000;
+                    let end = Date.now() + duration;
+                    (function frame() {
+                        confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+                        confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+                        if (Date.now() < end) requestAnimationFrame(frame);
+                    }());
+                }, 1000);
+            } else {
+                document.getElementById('lock-error').innerText = "ACCESS DENIED";
+                document.getElementById('password').value = '';
+            }
+        }
+
+        // --- GAME 1 (Rhythm) ---
+        let g1Level = 1;
+        let g1Spinning = false;
+        function startGame1() {
+            g1Spinning = true;
+            document.getElementById('g1-spinner').style.animationDuration = '2s';
+        }
+        function stopSpinner() {
+            if(!g1Spinning) return;
+            const spinner = document.getElementById('g1-spinner');
+            const style = window.getComputedStyle(spinner);
+            const matrix = new WebKitCSSMatrix(style.transform);
+            // Calculate angle from matrix
+            let angle = Math.round(Math.atan2(matrix.b, matrix.a) * (180/Math.PI));
+            if
